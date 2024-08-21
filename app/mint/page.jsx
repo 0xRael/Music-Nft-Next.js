@@ -4,6 +4,8 @@ import { useAccount } from "wagmi";
 import { readContract, writeContract } from "@wagmi/core";
 import { config } from "@/utils/providers"
 import { NFTAddress, NFTAbi } from "@/utils/nft-abi";
+import Dropzone from 'react-dropzone';
+import { Familjen_Grotesk } from "next/font/google";
 
 /*
 
@@ -17,46 +19,94 @@ import { NFTAddress, NFTAbi } from "@/utils/nft-abi";
 export default function MintNFT() {
     const [formInput, setFormInput] = useState({ name: '', description: '', audio: '', image: '', artist: '', genre: '', releaseDate: '' });
     const [uploading, setUploading] = useState(false);
+    const [audioFile, setAudioFile] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
     const { address } = useAccount();
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
     const handleInputChange = (e) => {
         setFormInput({ ...formInput, [e.target.name]: e.target.value });
     }
 
     const uploadData = async (metadata) => {
-        if(!address){
-            alert("Connect your wallet first");
-            return
-        };
         try {
-          setUploading(true);
           const data = new FormData();
+
           data.set("file", JSON.stringify(metadata));
           const uploadRequest = await fetch("/api/json", {
             method: "POST",
             body: data,
           });
+
           const uploadData = await uploadRequest.json();
-          setUploading(false);
+          console.log(`Metadata uploaded: ipfs://${uploadData.IpfsHash}`);
           return `ipfs://${uploadData.IpfsHash}`;
         } catch (e) {
           console.log(e);
-          setUploading(false);
-          alert("Trouble uploading file");
+          alert("Trouble uploading metadata");
+          return `ipfs://undefined`
         }
-      };
+    };
+
+    const uploadFile = async (file) => {
+        try {
+            const data = new FormData();
+            data.append('file', file);
+            
+            const uploadRequest = await fetch('/api/files', {
+                method: 'POST',
+                body: data,
+            });
+            const uploadData = await uploadRequest.json();
+            console.log(file);
+            console.log(`File uploaded: ipfs://${uploadData.IpfsHash}`);
+            return `ipfs://${uploadData.IpfsHash}`;
+        } catch (e) {
+            console.log(e);
+            alert("Trouble uploading file");
+            return `ipfs://undefined`
+          }
+    };
 
     const mintNFT = async () => {
         const { name, description, audio, image, artist, genre, releaseDate } = formInput;
-        if (!name || !audio || !artist) return;
+        if (!name ) return;
+        if(!address){
+            alert("Connect your wallet first");
+            return
+        };
+
+        setUploading(true);
+
+        let audioUrl = audio;
+        let imageUrl = image;
+
+        if(audioFile){
+            audioUrl = await uploadFile(audioFile);
+            if(audioUrl == "ipfs://undefined"){
+                setUploading(false);
+                alert("Error uploading Audio to IPFS");
+                return
+            }
+        }
+        if(imageFile){
+            imageUrl = await uploadFile(imageFile);
+            if(imageUrl == "ipfs://undefined"){
+                setUploading(false);
+                alert("Error uploading Cover to IPFS");
+                return
+            }
+        }
 
         // This is the metadata we need to save to NFT's URI
         // Following the standard format supported by OpenSea or Rarible
         const metadata = {
             name: name,
             description: description,
-            image: image,
-            audio: audio,
+            image: imageUrl,
+            audio: audioUrl,
+            animation_url: audioUrl,
             attributes: [
                 {
                     trait_type: "Genre",
@@ -72,13 +122,16 @@ export default function MintNFT() {
                 }
             ]
         };
-        
+
         const metadataUrl = await uploadData(metadata);
-        console.log(metadataUrl);
+
         if(metadataUrl == "ipfs://undefined"){
-            alert("Error uploading to IPFS")
+            setUploading(false);
+            alert("Error uploading metadata to IPFS")
             return
         }
+
+        setUploading(false);
         
         // We call the minting function in the NFT's contract
         //const transaction = await contract.mint(metadataUrl);
@@ -93,34 +146,52 @@ export default function MintNFT() {
     };
     
     return (
-    <div>
-        <h1>Mint a New NFT</h1>
+    <div className={"max-w-3xl mx-auto p-6 bg-gray-800 text-white rounded-lg shadow-lg"}>
+        <h1 className={"text-2xl font-bold mb-6"}>Mint a New NFT</h1>
 
-        <div className="row g-3">
-            <div className="col-md-6">
-                <input type="text" className="form-control" name="name" placeholder="Song Title" onChange={handleInputChange} />
+        <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>
+            <div>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="name" placeholder="Song Title" onChange={handleInputChange} />
             </div>
-            <div className="col-md-6">
-                <input type="text" className="form-control" name="artist" placeholder="Artist" onChange={handleInputChange} />
+            <div>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="artist" placeholder="Artist" onChange={handleInputChange} />
             </div>
             
-            <div className="col-md-12">
-                <input type="text" className="form-control" name="description" placeholder="Description" onChange={handleInputChange} />
+            <div className={"col-span-2"}>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="description" placeholder="Description" onChange={handleInputChange} />
             </div>
-            <div className="col-md-6">
-                <input type="text" className="form-control" name="audio" placeholder="Audio URL" onChange={handleInputChange} />
+            <div className={"w-full p-2 bg-gray-700 rounded-md"}>
+                <Dropzone accept="audio/"  maxSize={MAX_FILE_SIZE} onDrop={(acceptedFiles) => setAudioFile(acceptedFiles[0])}>
+                    {({ getRootProps, getInputProps }) => (
+                        <div {...getRootProps({ className: 'dropzone' })}>
+                            <input {...getInputProps()} />
+                            <p>{audioFile ? audioFile.name : 'Drag & drop an audio file here, or click to select one. Max. 5MB'}</p>
+                        </div>
+                    )}
+                </Dropzone>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="audio" placeholder="Or put an Audio's URL instead" onChange={handleInputChange} />
             </div>
-            <div className="col-md-6">
-                <input type="text" className="form-control" name="image" placeholder="Image URL" onChange={handleInputChange} />
+            <div className={"w-full p-2 bg-gray-700 rounded-md"}>
+                <Dropzone accept="image/" maxSize={MAX_FILE_SIZE} onDrop={(acceptedFiles) => setImageFile(acceptedFiles[0])}>
+                    {({ getRootProps, getInputProps }) => (
+                        <div {...getRootProps({ className: 'dropzone' })}>
+                            <input {...getInputProps()} />
+                            <p>{imageFile ? imageFile.name : 'Drag & drop an image file here, or click to select one. Max. 5MB'}</p>
+                        </div>
+                    )}
+                </Dropzone>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="image" placeholder="Or put an Image's URL instead" onChange={handleInputChange} />
             </div>
-            <div className="col-md-6">
-                <input type="text" className="form-control" name="genre" placeholder="Genre" onChange={handleInputChange} />
+            <div>
+                <input type="text" className={"w-full p-2 bg-gray-700 rounded-md"} name="genre" placeholder="Genre" onChange={handleInputChange} />
             </div>
-            <div className="col-md-6">
-                <input type="date" className="form-control" name="releaseDate" placeholder="Release Date" onChange={handleInputChange} />
+            <div>
+                <input type="date" className={"w-full p-2 bg-gray-700 rounded-md"} name="releaseDate" placeholder="Release Date" onChange={handleInputChange} />
             </div> 
 
-            <button className="btn btn-primary" onClick={mintNFT}>Mint NFT</button>
+            {uploading ? 'Uploading...' : (
+                 <button className={"col-span-2 p-3 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-600"} onClick={mintNFT} disabled={!address}>Mint NFT</button>
+            )}
         </div>
     </div>
     );

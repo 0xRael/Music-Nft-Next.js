@@ -4,7 +4,7 @@ import { useAccount } from "wagmi";
 import { readContract, writeContract } from "@wagmi/core";
 import { config } from "@/utils/providers";
 import { marketplaceAddress, marketplaceAbi } from "@/utils/market-abi";
-import { NFTAbi } from "@/utils/nft-abi";
+import { NFTAddress, NFTAbi } from "@/utils/nft-abi";
 import { shortenAddress, processIPFSString } from "@/utils/config";
 import { parseEther } from "viem";
 import WaveSurfer from "wavesurfer.js";
@@ -27,7 +27,7 @@ PARAMS
 
 */
 
-export function NFTDisplay({ keyProp='', contractAddressProp='', tokenIdProp='', priceProp='', seller='', configurable="true"}) {
+export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenIdProp='', priceProp='', seller='', configurable="true"}) {
     const [contractAddress, setContractAddress] = useState(contractAddressProp);
     const [tokenId, setTokenId] = useState(tokenIdProp);
     const [nft, setNft] = useState(null);
@@ -248,20 +248,20 @@ export function NFTDisplay({ keyProp='', contractAddressProp='', tokenIdProp='',
                                 <Waveform audioUrl={processIPFSString(nft.audio)}  />
                         </div>
 
-                        <div className="flex flex-grow w-full justify-between items-center mt-2">
+                        <div className={"flex flex-grow w-full justify-between items-center mt-2 md:flex-row"}>
                             {nft.owner != marketplaceAddress ? (
-                                <div>
+                                <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
                                     <strong>Owner:</strong>{shortenAddress(nft.owner)}
                                 </div>
                             ) : (
-                                <div>
+                                <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
                                     <p className="mb-0"><strong>Price:</strong> {price} ETH</p>
                                     <p className="mb-0"><strong>Seller:</strong> {shortenAddress(seller)}</p>
                                 </div>
                             )}
 
-                            <div className="flex">
-                                {isOwner && (
+                            <div className={"flex md:w-1/3 flex-grow"}>
+                                {isOwner && seller == '' && (
                                     <div className="flex flex-col md:flex-row">
                                         <input
                                         type="text"
@@ -273,7 +273,7 @@ export function NFTDisplay({ keyProp='', contractAddressProp='', tokenIdProp='',
                                         <button className="btn btn-primary col bg-blue-500 text-white px-4 py-2 rounded" onClick={addToMarketplace}>Add to Marketplace</button>
                                     </div>
                                 )}
-                                {seller != '' && (
+                                {!isOwner && seller != '' && (
                                     <button className="btn btn-success me-2 bg-green-500 text-white px-4 py-2 rounded" onClick={buyNFT}>Buy</button>
                                 )}
                                 {isOwner && seller != '' && (
