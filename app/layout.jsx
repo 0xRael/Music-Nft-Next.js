@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/utils/providers";
 import '@rainbow-me/rainbowkit/styles.css';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Link from 'next/link';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,33 +12,31 @@ export const metadata = {
   description: "Music NFT Marketplace",
 };
 
+function Header() {
+  return (
+    <header className={"w-full sticky top-0 z-10 py-2 border-b-2 mb-5 border-[#eaeaea]"}>
+      <nav className={"max-w-7xl mx-auto flex justify-between items-center"}>
+        <div>
+          <Link className={"mx-4"} href="/marketplace">See the Market</Link>
+          <Link className={"mx-4"} href="/mint">Mint an NFT</Link>
+          <Link className={"mx-4"} href="/view-nft">View an NFT</Link>
+        </div>
+        <ConnectButton />
+      </nav>
+    </header>
+  )
+}
+
 export default function RootLayout({
   children,
 }) {
-  const renderButton = () => {
-    // if (address) {
-    // //if the user has connected their wallet,
-    //   <div>Wallet connected</div>;
-    // } else {
-      
-    // }
-    return (
-      // if the user hasn't connected their wallet, show them a connect wallet button
-       <ConnectButton />
-       // this button is provided to us by RainbowKit itself
-      );
-  };
 
   return (
     <html lang="en">
-      <head>
-      </head>
       <body className={inter.className+" bg-gray-800 h-screen"}>
         <div className={"px-12 h-screen"}>
           <Providers >
-            <header className={"w-full sticky top-0 z-10 py-2 border-b-2 mb-5 border-[#eaeaea]"}>
-                  { renderButton() }
-            </header>
+            <Header />
             {children}
           </Providers>
         </div>
@@ -45,7 +44,7 @@ export default function RootLayout({
         <footer className={"w-full fixed bottom-0  border-t-2 border-[#eaeaea] justify-center items-center text-center"}>
 
           Made with &#10084; by 0xRael
-         </footer>
+        </footer>
       </body>
     </html>
   );

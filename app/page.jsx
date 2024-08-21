@@ -8,16 +8,16 @@ export default function Home() {
           Welcome!
         </h1>
         <ul>
-      <li>
-        <Link href="/marketplace">See the Market</Link>
-      </li>
-      <li>
-        <Link href="/mint">Mint an NFT</Link>
-      </li>
-      <li>
-        <Link href="/view-nft">View an NFT</Link>
-      </li>
-    </ul>
+          <li>
+            <Link href="/marketplace">See the Market</Link>
+          </li>
+          <li>
+            <Link href="/mint">Mint an NFT</Link>
+          </li>
+          <li>
+            <Link href="/view-nft">View an NFT</Link>
+          </li>
+        </ul>
       </div>
   );
 }
