@@ -1,3 +1,5 @@
+https://music-nft-next-js.vercel.app
+
 Basically, a platform where musicians can mint NFTs with their music, put them to sell, and users can easily buy these NFTs, with all the Market logic happening on-chain
 
 ## My Music NFT Marketplace
