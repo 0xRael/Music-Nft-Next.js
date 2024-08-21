@@ -18,11 +18,12 @@ import { formatEther } from "viem";
 
 */
 
-export default function MarketListings({ deepness=5 }) {
+export default function MarketListings() {
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const account = useAccount();
     const { address } = useAccount();
+    const [deepness, setDeepness] = useState(5);
 
     //const { readContract } = useReadContract();
     
