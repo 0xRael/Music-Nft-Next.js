@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState, useRef } from "react";
+// Contract related Modules
 import { useAccount } from "wagmi";
 import { readContract, writeContract } from "@wagmi/core";
 import { config } from "@/utils/providers";
@@ -7,9 +8,9 @@ import { marketplaceAddress, marketplaceAbi } from "@/utils/market-abi";
 import { NFTAddress, NFTAbi } from "@/utils/nft-abi";
 import { shortenAddress, processIPFSString } from "@/utils/config";
 import { parseEther } from "viem";
+// Audio visualization related Modules
 import WaveSurfer from "wavesurfer.js";
 import Hover from 'wavesurfer.js/dist/plugins/hover.esm.js';
-//import Image from "next/image";
 
 /*
 NFT Display Card
@@ -26,6 +27,128 @@ PARAMS
 - config: Wether the value's can be modificable or not
 
 */
+
+// Uses wavesurfer.js to generate a playable waveform from the {audioUrl}
+function Waveform({ audioUrl }) {
+    const waveformRef = useRef(null);
+
+    useEffect(() => {
+        if (audioUrl && typeof window !== 'undefined') {
+            console.log(audioUrl);
+            const ws = WaveSurfer.create({
+                container: waveformRef.current,
+                waveColor: "#bbbbbbbb",
+                progressColor: "#ae74cddd",
+                url: audioUrl,
+
+                barWidth: 2,
+
+                plugins: [
+                    Hover.create({
+                    lineColor: '#fed4ff',
+                    lineWidth: 2,
+                    labelBackground: '#555',
+                    labelColor: '#fff',
+                    labelSize: '11px',
+                    }),
+                ],
+            });
+        
+            ws.on('interaction', () => {
+                ws.playPause();
+            });
+            
+            return () => ws.destroy();
+        }
+    }, [audioUrl]);
+    
+    return <div ref={waveformRef} style={{position:'relative'}}>
+    </div>;
+};
+
+function ShareButton({ address, tokenId }) {
+    const [copySuccess, setCopySuccess] = useState('');
+    
+    const copyToClipboard = async () => {
+        if(typeof window == 'undefined') return;
+        try {
+            await navigator.clipboard.writeText(`${window.location.origin}/view-nft/${address}/${tokenId}`);
+            setCopySuccess('Copied!');
+            // Reset the confirmation message after a delay
+            setTimeout(() => setCopySuccess(''), 2000);
+        } catch (err) {
+            setCopySuccess('Failed to copy');
+        }
+    };
+    
+    return (
+        <div className="inline-block">
+            <button
+            onClick={copyToClipboard}
+            className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
+            >
+                Share
+            </button>
+            {copySuccess && <span className="ml-2 text-green-500">{copySuccess}</span>}
+        </div>
+    );
+}
+
+function BaseDisplay({ nft, children }){
+    return (
+        <div className={"flex p-3 w-full items-center"} style={{
+            position: 'relative', borderRadius: '30px', color: '#fff',  overflow: 'hidden'
+        }}>
+            {/* The backgorund image */}
+            <img src={processIPFSString(nft.image)} alt={nft.name} style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'blur(8px) brightness(0.4)',
+                zIndex: 0,
+            }} />
+
+            {/* The image at the left side */}
+            <div  style={{  position: 'relative', zIndex: 1, margin: '1%'}}>
+                <img src={processIPFSString(nft.image)} alt={nft.name} 
+                    style={{ width: '200px', height: '200px', borderRadius: '8%', objectFit: 'cover', }}
+                />
+            </div>
+
+            <div className={"flex-grow w-full relative z-10 mr-3"} 
+                style={{padding: '1% 2% 1% 0.5%', position: 'relative', zIndex: 1, width:'100%' }}
+            >
+                <div className="flex flex-grow w-full flex-col md:flex-row" style={{width:'100%'}}>
+                    {/* Title and desc, aligned to the left */}
+                    <div className="md:w-2/3 flex-grow" style={{width:'80%'}}>
+                        <h5>{nft.name}</h5>
+                        <p className="mb-1">{nft.description}</p>
+                    </div>
+                    {/* Timestamp and Genre, aligned to the right */}
+                    <div className="md:w-1/3 text-right flex-grow">
+                        { nft.attributes && <div>
+                            {nft.attributes.map((attr, index) => {
+                                return <p key={index} className="mb-0"><strong>{attr.trait_type}:</strong> {attr.value}</p>;
+                            })}
+                        </div>}
+                    </div>
+                </div>
+
+                {/* The audio display */}
+                <div className="w-full mt-2">
+                        <Waveform audioUrl={processIPFSString(nft.audio)}  />
+                </div>
+                
+                <div className={"flex flex-grow w-full justify-between items-center mt-2 md:flex-row"}>
+                    {children}
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenIdProp='', priceProp='', seller='', configurable="true"}) {
     const [contractAddress, setContractAddress] = useState(contractAddressProp);
@@ -185,162 +308,92 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
         }
     };
 
-    return (
-        <div>
-            { configurable == "true" && (
-                <div className={"card row p-5 m-3"}>
-                    <input
+    // COMPONENTS
+
+    function configNFTInfo(){
+        return (
+            <div className={"card row p-5 m-3"}>
+                <input
                     type="text"
-                    className="form-control col"
                     placeholder="Contract Address"
                     value={contractAddress}
                     onChange={(e) => setContractAddress(e.target.value)}
-                    />
-                    <input
+                />
+                <input
                     type="text"
-                    className="form-control col"
                     placeholder="NFT Id"
                     value={tokenId}
                     onChange={(e) => setTokenId(e.target.value)}
-                    />
-                </div>
-            )}
+                />
+            </div>
+        )
+    }
+
+    function renderActionBtns(){
+        if(isOwner && seller == ''){
+            // User's the owner and it's not being sold. Render 'Add to Market' button
+            return (<div className="flex flex-col md:flex-row">
+                <input
+                type="text"
+                className="form-input col mb-2 md:mb-0 md:mr-2"
+                placeholder="Price in ETH"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                />
+                <button
+                className="btn btn-primary col bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={addToMarketplace}>
+                    Add to Marketplace
+                </button>
+            </div>)
+        }
+        if(!isOwner && seller != ''){
+            // User's not the owner and it's being sold. Render 'Buy' button
+            return (<button 
+                className="btn btn-success me-2 bg-green-500 text-white px-4 py-2 rounded"
+                onClick={buyNFT}>
+                    Buy
+                </button>)
+        }
+        if(isOwner && seller != '') {
+            // User's the owner and it's being sold. Render 'Cancel' button
+            return (<button
+                className="btn btn-danger bg-red-500 text-white px-4 py-2 rounded" 
+                onClick={cancelListing}>
+                    Cancel Listing
+                </button>)
+        }
+
+        return <div></div>
+    }
+
+    return (
+        <div>
+            {/* {configurable} is set to true in the /view-nft/ route, but not in the marketplace.
+                This renders a menu to chose which NFT to display by its ID and Contract Address */}
+            { configurable == "true" && configNFTInfo()}
+
             {nft ? (
-                <div className={"flex p-3 w-full items-center"} style={{
-                    position: 'relative', borderRadius: '30px', color: '#fff',  overflow: 'hidden'
-                }}>
-                    <img src={processIPFSString(nft.image)} alt={nft.name} style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        filter: 'blur(8px) brightness(0.4)',
-                        zIndex: 0,
-                    }} />
-
-                    <div  style={{  position: 'relative', zIndex: 1, margin: '1%'}}>
-                        <img src={processIPFSString(nft.image)} alt={nft.name}  style={{ width: '200px', height: '200px', borderRadius: '8%', objectFit: 'cover', }} />
+            <BaseDisplay nft={nft}>
+                {nft.owner != marketplaceAddress ? (
+                    <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
+                        <strong>Owner:</strong>{shortenAddress(nft.owner)}
                     </div>
-                    <div className={"flex-grow w-full relative z-10 mr-3"}  style={{  
-            padding: '1% 2% 1% 0.5%', position: 'relative', zIndex: 1, width:'100%' }}>
-                        <div className="flex flex-grow w-full flex-col md:flex-row" style={{width:'100%'}}>
-                            {/* Title and desc, aligned to the left */}
-                            <div className="md:w-2/3 flex-grow" style={{width:'80%'}}>
-                                <h5>{nft.name}</h5>
-                                <p className="mb-1">{nft.description}</p>
-                            </div>
-                            {/* Timestamp and Genre, aligned to the right */}
-                            <div className="md:w-1/3 text-right flex-grow">
-                                { nft.attributes && <div>
-                                    {nft.attributes.map((attr, index) => {
-                                        return <p key={index} className="mb-0"><strong>{attr.trait_type}:</strong> {attr.value}</p>;
-                                    })}
-                                </div>}
-                            </div>
-                        </div>
-                        {/*<audio controls className="w-100 mt-2">
-                            <source src={processIPFSString(nft.audio)} type="audio/mpeg" />
-                            Your browser does not support the audio element.
-                        </audio>*/}
-                        <div className="w-full mt-2">
-                                <Waveform audioUrl={processIPFSString(nft.audio)}  />
-                        </div>
-
-                        <div className={"flex flex-grow w-full justify-between items-center mt-2 md:flex-row"}>
-                            {nft.owner != marketplaceAddress ? (
-                                <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
-                                    <strong>Owner:</strong>{shortenAddress(nft.owner)}
-                                </div>
-                            ) : (
-                                <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
-                                    <p className="mb-0"><strong>Price:</strong> {price} ETH</p>
-                                    <p className="mb-0"><strong>Seller:</strong> {shortenAddress(seller)}</p>
-                                </div>
-                            )}
-
-                            <div className={"flex md:w-1/3 flex-grow"}>
-                                {isOwner && seller == '' && (
-                                    <div className="flex flex-col md:flex-row">
-                                        <input
-                                        type="text"
-                                        className="form-input col mb-2 md:mb-0 md:mr-2"
-                                        placeholder="Price in ETH"
-                                        value={price}
-                                        onChange={(e) => setPrice(e.target.value)}
-                                        />
-                                        <button className="btn btn-primary col bg-blue-500 text-white px-4 py-2 rounded" onClick={addToMarketplace}>Add to Marketplace</button>
-                                    </div>
-                                )}
-                                {!isOwner && seller != '' && (
-                                    <button className="btn btn-success me-2 bg-green-500 text-white px-4 py-2 rounded" onClick={buyNFT}>Buy</button>
-                                )}
-                                {isOwner && seller != '' && (
-                                    <button className="btn btn-danger bg-red-500 text-white px-4 py-2 rounded" onClick={cancelListing}>Cancel Listing</button>
-                                )}
-                            </div>
-                        </div>
+                ) : (
+                    <div className={"md:w-2/3 flex-grow"} style={{width:'80%'}}>
+                        <p className="mb-0"><strong>Price:</strong> {price} ETH</p>
+                        <p className="mb-0"><strong>Seller:</strong> {shortenAddress(seller)}</p>
                     </div>
+                )}
+
+                <div className={"flex md:w-1/3 flex-grow"}>
+                    {renderActionBtns()}
+                    <ShareButton address={contractAddress} tokenId={tokenId}></ShareButton>
                 </div>
+            </BaseDisplay>
             ) : (
                 <p>LOADING NFT...</p>
             )}
         </div>
     );
 }
-
-// Uses waveform.js to generate a playable waveform from the {audioUrl}
-function Waveform({ audioUrl }) {
-    const waveformRef = useRef(null);
-    const [wavesurfer, setWaveSurfer] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-
-    useEffect(() => {
-        if (audioUrl && typeof window !== 'undefined') {
-            console.log(audioUrl);
-            const ws = WaveSurfer.create({
-                container: waveformRef.current,
-                waveColor: "#bbbbbbbb",
-                progressColor: "#ae74cddd",
-                url: audioUrl,
-
-                barWidth: 2,
-
-                plugins: [
-    Hover.create({
-      lineColor: '#fed4ff',
-      lineWidth: 2,
-      labelBackground: '#555',
-      labelColor: '#fff',
-      labelSize: '11px',
-    }),
-  ],
-            });
-        
-            ws.on('interaction', () => {
-                ws.playPause();
-            });
-            
-            setWaveSurfer(ws);
-            return () => ws.destroy();
-        }
-    }, [audioUrl]);
-
-    const toggle = () => {
-        if (!wavesurfer) return;
-
-        if (wavesurfer.isPlaying()) {
-            wavesurfer.pause();
-            setIsPlaying(false);
-        } else {
-            wavesurfer.play();
-            setIsPlaying(true);
-        }
-    }
-    
-    // return <div></div>;
-   //  style={{ position: 'relative', zIndex: 2 }}
-    return <div ref={waveformRef} style={{position:'relative'}}>
-    </div>;
-};
