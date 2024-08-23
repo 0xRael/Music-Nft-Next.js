@@ -1,16 +1,17 @@
 "use client"
-import { useEffect, useState, useRef } from "react";
-// Contract related Modules
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { readContract, writeContract } from "@wagmi/core";
 import { config } from "@/utils/providers";
+
 import { marketplaceAddress, marketplaceAbi } from "@/utils/market-abi";
 import { NFTAddress, NFTAbi } from "@/utils/nft-abi";
 import { shortenAddress, processIPFSString } from "@/utils/config";
 import { parseEther } from "viem";
-// Audio visualization related Modules
-import WaveSurfer from "wavesurfer.js";
-import Hover from 'wavesurfer.js/dist/plugins/hover.esm.js';
+
+import { Waveform } from '@/components/waveform'
+import { ShareButton } from '@/components/share-button'
+
 
 /*
 NFT Display Card
@@ -27,113 +28,6 @@ PARAMS
 - config: Wether the value's can be modificable or not
 
 */
-
-// Uses wavesurfer.js to generate a playable waveform from the {audioUrl}
-function Waveform({ audioUrl }) {
-    const waveformRef = useRef(null);
-
-    useEffect(() => {
-        if (audioUrl && typeof window !== 'undefined') {
-            console.log(audioUrl);
-            const ws = WaveSurfer.create({
-                container: waveformRef.current,
-                waveColor: "#bbbbbbbb",
-                progressColor: "#ae74cddd",
-                url: audioUrl,
-
-                barWidth: 2,
-
-                plugins: [
-                    Hover.create({
-                    lineColor: '#fed4ff',
-                    lineWidth: 2,
-                    labelBackground: '#555',
-                    labelColor: '#fff',
-                    labelSize: '11px',
-                    }),
-                ],
-            });
-        
-            ws.on('interaction', () => {
-                ws.playPause();
-            });
-            
-            return () => ws.destroy();
-        }
-    }, [audioUrl]);
-    
-    return <div ref={waveformRef} style={{position:'relative'}}>
-    </div>;
-};
-
-function ShareButton({ address, tokenId }) {
-    const [copySuccess, setCopySuccess] = useState('');
-    const [isOpen, setIsOpen] = useState(false);
-    
-    const togglePopup = () => {
-        setIsOpen(!isOpen);
-    };
-
-    const copyToClipboard = async () => {
-        if(typeof window == 'undefined') return;
-        try {
-            await navigator.clipboard.writeText(`${window.location.origin}/view-nft/${address}/${tokenId}`);
-            setCopySuccess('Copied!');
-            // Reset the confirmation message after a delay
-            setTimeout(() => setCopySuccess(''), 2000);
-        } catch (err) {
-            setCopySuccess('Failed to copy');
-        }
-    };
-    
-    return (
-        <div className={"inline-block ml-2"}>
-            <button
-            onClick={togglePopup}
-            className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
-            >
-                Share
-            </button>
-
-            {/* This popup will be opened when pressing Share, allowing to pick a share option */}
-            {isOpen && (
-                <div className={"absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"}>
-                    <ul className={"py-1"}>
-                        <li>
-                            <button
-                                onClick={copyToClipboard}
-                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"}
-                            >
-                                Copy Shareable Link
-                            </button>
-                        </li>
-                        <li>
-                            <a
-                                href={`https://sepolia.etherscan.io/nft/${address}/${tokenId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
-                            >
-                                View on Etherscan
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href={`https://testnets.opensea.io/assets/sepolia/${address}/${tokenId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
-                            >
-                                View on OpenSea
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            )}
-            {copySuccess && <span className={"ml-2 text-green-500"}>{copySuccess}</span>}
-        </div>
-    );
-}
 
 function BaseDisplay({ nft, children }){
     return (
@@ -159,8 +53,8 @@ function BaseDisplay({ nft, children }){
                 />
             </div>
 
-            <div className={"flex-grow w-full relative z-10 mr-3"} 
-                style={{padding: '1% 2% 1% 0.5%', position: 'relative', zIndex: 1, width:'100%' }}
+            <div className={"flex-grow w-full relative z-10 mr-3 p-2"} 
+                style={{position: 'relative', zIndex: 1, width:'100%' }}
             >
                 <div className="flex flex-grow w-full flex-col md:flex-row" style={{width:'100%'}}>
                     {/* Title and desc, aligned to the left */}
@@ -393,7 +287,7 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
             return (<button 
                 className="btn btn-success me-2 bg-green-500 text-white px-4 py-2 rounded"
                 onClick={buyNFT}>
-                    Buy
+                    Buy This
                 </button>)
         }
         if(isOwner && seller != '') {
@@ -417,17 +311,17 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
             {nft ? (
             <BaseDisplay nft={nft}>
                 {nft.owner != marketplaceAddress ? (
-                    <div className={"md:w-2/3 flex-grow"} style={{width:'60%'}}>
+                    <div className={"md:w-2/3 flex-grow"} style={{width:'100%'}}>
                         <strong>Owner:</strong>{shortenAddress(nft.owner)}
                     </div>
                 ) : (
-                    <div className={"md:w-2/3 flex-grow"} style={{width:'80%'}}>
+                    <div className={"md:w-2/3 flex-grow"} style={{width:'100%'}}>
                         <p className="mb-0"><strong>Price:</strong> {price} ETH</p>
                         <p className="mb-0"><strong>Seller:</strong> {shortenAddress(seller)}</p>
                     </div>
                 )}
 
-                <div className={"flex md:w-1/3 flex-grow"}>
+                <div className={"md:w-1/3 flex-grow"}>
                     {renderActionBtns()}
                     <ShareButton address={contractAddress} tokenId={tokenId}></ShareButton>
                 </div>

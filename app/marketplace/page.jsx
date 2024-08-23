@@ -4,7 +4,7 @@ import { useAccount } from "wagmi";
 import { readContract, getStorageAt } from "@wagmi/core";
 import { config } from "@/utils/providers"
 import { marketplaceAddress, marketplaceAbi } from "@/utils/market-abi";
-import { NFTDisplay } from "@/utils/nft-display"
+import { NFTDisplay } from "@/components/nft-display"
 import { formatEther } from "viem";
 
 /*
@@ -82,18 +82,20 @@ export default function MarketListings() {
     return (
         <div>
             {loading ? (
-                <p className="d-flex justify-content-center">Loading...</p>
+                <p className={"d-flex justify-content-center"}>Loading...</p>
             ) : (
                 listings.map(listing => (
-                    <NFTDisplay
-                    key={listing.id}
-                    keyProp={listing.id}
-                    contractAddressProp={listing.tokenContract}
-                    tokenIdProp={listing.tokenId}
-                    priceProp={listing.price}
-                    seller={listing.seller}
-                    configurable="false"
-                    />
+                    <div className={"py-3"}>
+                        <NFTDisplay
+                        key={listing.id}
+                        keyProp={listing.id}
+                        contractAddressProp={listing.tokenContract}
+                        tokenIdProp={listing.tokenId}
+                        priceProp={listing.price}
+                        seller={listing.seller}
+                        configurable="false"
+                        />
+                    </div>
                 ))
             )}
         </div>

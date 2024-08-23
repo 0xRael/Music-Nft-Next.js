@@ -1,5 +1,5 @@
 'use client'
-import { NFTDisplay } from "@/utils/nft-display"
+import { NFTDisplay } from "@/components/nft-display"
 
 export default function ViewNFT() {
     return (
