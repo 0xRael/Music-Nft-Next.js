@@ -252,12 +252,14 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
                     type="text"
                     placeholder="Contract Address"
                     value={contractAddress}
+                    className={"bg-gray-800 text-white rounded-l"}
                     onChange={(e) => setContractAddress(e.target.value)}
                 />
                 <input
                     type="text"
                     placeholder="NFT Id"
                     value={tokenId}
+                    className={"bg-gray-800 text-white rounded-r"}
                     onChange={(e) => setTokenId(e.target.value)}
                 />
             </div>
@@ -267,18 +269,18 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
     function renderActionBtns(){
         if(isOwner && seller == ''){
             // User's the owner and it's not being sold. Render 'Add to Market' button
-            return (<div className="flex flex-col md:flex-row">
+            return (<div className={"flex flex-row"}>
                 <input
                 type="text"
-                className="form-input col mb-2 md:mb-0 md:mr-2"
+                className={"bg-gray-800 text-white rounded-l md:mb-0"}
                 placeholder="Price in ETH"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 />
                 <button
-                className="btn btn-primary col bg-blue-500 text-white px-4 py-2 rounded"
+                className={"btn btn-primary bg-gray-500 hover:bg-gray-700 text-white px-2 py-2 rounded-r"}
                 onClick={addToMarketplace}>
-                    Add to Marketplace
+                    Sell
                 </button>
             </div>)
         }
@@ -321,7 +323,7 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
                     </div>
                 )}
 
-                <div className={"md:w-1/3 flex-grow"}>
+                <div className={"md:w-1/3 flex flex-grow flex-row"}>
                     {renderActionBtns()}
                     <ShareButton address={contractAddress} tokenId={tokenId}></ShareButton>
                 </div>
