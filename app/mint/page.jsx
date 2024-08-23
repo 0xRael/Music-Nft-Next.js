@@ -16,6 +16,10 @@ import { Familjen_Grotesk } from "next/font/google";
 
 */
 
+function openNFT(address, tokenId){
+    window.location.href = `${window.location.origin}/view-nft/${address}/${tokenId}`
+}
+
 export default function MintNFT() {
     const [formInput, setFormInput] = useState({ name: '', description: '', audio: '', image: '', artist: '', genre: '', releaseDate: '' });
     const [uploading, setUploading] = useState(false);
@@ -132,6 +136,12 @@ export default function MintNFT() {
         }
 
         setUploading(false);
+
+        const nextTokenId = await readContract(config, {
+            abi: NFTAbi,
+            address: NFTAddress,
+            functionName: "nextTokenId"
+        });
         
         // We call the minting function in the NFT's contract
         //const transaction = await contract.mint(metadataUrl);
@@ -142,7 +152,11 @@ export default function MintNFT() {
             args: [metadataUrl]
         });
         
-        alert('NFT minted successfully!');
+        alert(```NFT's being minted!
+            Remember: Metadata can take some time to appear, you must wait IPFS gateways to retrieve it first.```);
+        
+        // Redirect user to NFT's page
+        openNFT(NFTAddress, nextTokenId)
     };
     
     return (
