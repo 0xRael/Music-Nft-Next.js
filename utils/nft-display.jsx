@@ -68,7 +68,12 @@ function Waveform({ audioUrl }) {
 
 function ShareButton({ address, tokenId }) {
     const [copySuccess, setCopySuccess] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
     
+    const togglePopup = () => {
+        setIsOpen(!isOpen);
+    };
+
     const copyToClipboard = async () => {
         if(typeof window == 'undefined') return;
         try {
@@ -82,14 +87,50 @@ function ShareButton({ address, tokenId }) {
     };
     
     return (
-        <div className="inline-block">
+        <div className={"inline-block ml-2"}>
             <button
-            onClick={copyToClipboard}
+            onClick={togglePopup}
             className={"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"}
             >
                 Share
             </button>
-            {copySuccess && <span className="ml-2 text-green-500">{copySuccess}</span>}
+
+            {/* This popup will be opened when pressing Share, allowing to pick a share option */}
+            {isOpen && (
+                <div className={"absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"}>
+                    <ul className={"py-1"}>
+                        <li>
+                            <button
+                                onClick={copyToClipboard}
+                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"}
+                            >
+                                Copy Shareable Link
+                            </button>
+                        </li>
+                        <li>
+                            <a
+                                href={`https://sepolia.etherscan.io/nft/${address}/${tokenId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
+                            >
+                                View on Etherscan
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href={`https://testnets.opensea.io/assets/sepolia/${address}/${tokenId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={"block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"}
+                            >
+                                View on OpenSea
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            )}
+            {copySuccess && <span className={"ml-2 text-green-500"}>{copySuccess}</span>}
         </div>
     );
 }
