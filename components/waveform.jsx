@@ -1,5 +1,5 @@
 "use client"
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import WaveSurfer from "wavesurfer.js";
 import Hover from 'wavesurfer.js/dist/plugins/hover.esm.js';
 
