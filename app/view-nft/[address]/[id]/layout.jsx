@@ -4,6 +4,7 @@ import { Providers } from "@/utils/providers";
 import '@rainbow-me/rainbowkit/styles.css';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +28,7 @@ function Header() {
   )
 }
 
-export default function RootLayout({
+export default function pageWrapper ({
   children,
 }) {
 
@@ -37,7 +38,9 @@ export default function RootLayout({
         <div className={"px-12 h-screen"}>
           <Providers >
             <Header />
-            {children}
+            <div>
+               {children}
+            </div>
           </Providers>
         </div>
 

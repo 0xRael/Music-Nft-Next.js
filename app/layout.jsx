@@ -1,5 +1,5 @@
 import { Inter } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
 import { Providers } from "@/utils/providers";
 import '@rainbow-me/rainbowkit/styles.css';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -27,7 +27,7 @@ function Header() {
   )
 }
 
-export default function RootLayout({
+export default function pageWrapper ({
   children,
 }) {
 
@@ -37,7 +37,9 @@ export default function RootLayout({
         <div className={"px-12 h-screen"}>
           <Providers >
             <Header />
-            {children}
+            <div>
+               {children}
+            </div>
           </Providers>
         </div>
 

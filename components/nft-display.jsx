@@ -12,6 +12,7 @@ import { parseEther } from "viem";
 import { Waveform } from '@/components/waveform'
 import { ShareButton } from '@/components/share-button'
 
+import { motion, AnimatePresence } from 'framer-motion';
 
 /*
 NFT Display Card
@@ -31,57 +32,64 @@ PARAMS
 
 function BaseDisplay({ nft, children }){
     return (
-        <div className={"flex p-3 w-full items-center"} style={{
-            position: 'relative', borderRadius: '30px', color: '#fff',  overflow: 'hidden'
-        }}>
-            {/* The backgorund image */}
-            <img src={processIPFSString(nft.image)} alt={nft.name} style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                filter: 'blur(8px) brightness(0.4)',
-                zIndex: 0,
-            }} />
-
-            {/* The image at the left side */}
-            <div  style={{  position: 'relative', zIndex: 1, margin: '1%'}}>
-                <img src={processIPFSString(nft.image)} alt={nft.name} 
-                    style={{ width: '200px', height: '200px', borderRadius: '8%', objectFit: 'cover', }}
-                />
-            </div>
-
-            <div className={"flex-grow w-full relative z-10 mr-3 p-2"} 
-                style={{position: 'relative', zIndex: 1, width:'100%' }}
+        <AnimatePresence>
+            <motion.div
+                className={"flex p-3 w-full items-center"}
+                style={{ position: 'relative', borderRadius: '30px', color: '#fff',  overflow: 'hidden' }}
+                initial = {{ opacity: 0, y: 20, scale: 0.8 }}
+	whileInView = {{ opacity: 1, y: 0, scale: 0.98 }}
+	whileHover = {{ opacity: 1, y: 0, scale: 1 }}
+                exit = {{ opacity: 0, y: 20, scale: 0.8 }}
             >
-                <div className="flex flex-grow w-full flex-col md:flex-row" style={{width:'100%'}}>
-                    {/* Title and desc, aligned to the left */}
-                    <div className="md:w-2/3 flex-grow" style={{width:'80%'}}>
-                        <h5>{nft.name}</h5>
-                        <p className="mb-1">{nft.description}</p>
-                    </div>
-                    {/* Timestamp and Genre, aligned to the right */}
-                    <div className="md:w-1/3 text-right flex-grow">
-                        { nft.attributes && <div>
-                            {nft.attributes.map((attr, index) => {
-                                return <p key={index} className="mb-0"><strong>{attr.trait_type}:</strong> {attr.value}</p>;
-                            })}
-                        </div>}
-                    </div>
+                {/* The backgorund image */}
+                <img src={processIPFSString(nft.image)} alt={nft.name} style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: 'blur(8px) brightness(0.4)',
+                    zIndex: 0,
+                }} />
+
+                {/* The image at the left side */}
+                <div  style={{  position: 'relative', zIndex: 1, margin: '1%'}}>
+                    <img src={processIPFSString(nft.image)} alt={nft.name} 
+                        style={{ width: '200px', height: '200px', borderRadius: '8%', objectFit: 'cover', }}
+                    />
                 </div>
 
-                {/* The audio display */}
-                <div className="w-full mt-2">
-                        <Waveform audioUrl={processIPFSString(nft.audio)}  />
+                <div className={"flex-grow w-full relative z-10 mr-3 p-2"} 
+                    style={{position: 'relative', zIndex: 1, width:'100%' }}
+                >
+                    <div className="flex flex-grow w-full flex-col md:flex-row" style={{width:'100%'}}>
+                        {/* Title and desc, aligned to the left */}
+                        <div className="md:w-2/3 flex-grow" style={{width:'80%'}}>
+                            <h5>{nft.name}</h5>
+                            <p className="mb-1">{nft.description}</p>
+                        </div>
+                        {/* Timestamp and Genre, aligned to the right */}
+                        <div className="md:w-1/3 text-right flex-grow">
+                            { nft.attributes && <div>
+                                {nft.attributes.map((attr, index) => {
+                                    return <p key={index} className="mb-0"><strong>{attr.trait_type}:</strong> {attr.value}</p>;
+                                })}
+                            </div>}
+                        </div>
+                    </div>
+
+                    {/* The audio display */}
+                    <div className="w-full mt-2">
+                            <Waveform audioUrl={processIPFSString(nft.audio)}  />
+                    </div>
+                    
+                    <div className={"flex flex-grow w-full justify-between items-center mt-2 md:flex-row"}>
+                        {children}
+                    </div>
                 </div>
-                
-                <div className={"flex flex-grow w-full justify-between items-center mt-2 md:flex-row"}>
-                    {children}
-                </div>
-            </div>
-        </div>
+            </motion.div>
+        </AnimatePresence>
     )
 }
 
@@ -329,7 +337,7 @@ export function NFTDisplay({ keyProp='', contractAddressProp=NFTAddress, tokenId
                 </div>
             </BaseDisplay>
             ) : (
-                <p>LOADING NFT...</p>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>LOADING NFT...</motion.p>
             )}
         </div>
     );

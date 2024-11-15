@@ -1,6 +1,8 @@
 "use client"
 import { useState } from "react";
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 // When clicked open a popup, this popup uses links generated from {address} and {tokenId}
 export function ShareButton({ address, tokenId }) {
     const [copySuccess, setCopySuccess] = useState('');
@@ -32,13 +34,16 @@ export function ShareButton({ address, tokenId }) {
 
             {/* This popup will be opened when pressing Share, allowing to pick a share option */}
             {isOpen && (
-                <div className={"absolute rounded-md shadow-lg justify-between items-center z-20"} style={{
+	<AnimatePresence>
+                <motion.div className={"absolute rounded-md shadow-lg justify-between items-center z-20"} style={{
                     bottom: '25%',
                     right: '0%',
                     width: '25%',
                     height: '50%',
                     background: '#dddddddd'
-                }}>
+                }} initial = {{ opacity: 0, y: 20 }}
+	animate = {{ opacity: 1, y: 0 }}
+                exit = {{ opacity: 0, y: 20 }}>
                     <ul className={"py-5"}>
                         <li>
                             <button
@@ -69,7 +74,8 @@ export function ShareButton({ address, tokenId }) {
                             </a>
                         </li>
                     </ul>
-                </div>
+                </motion.div>
+	</AnimatePresence>
             )}
             {copySuccess && <span className={"ml-2 text-green-500"}>{copySuccess}</span>}
         </div>

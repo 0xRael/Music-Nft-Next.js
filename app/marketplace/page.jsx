@@ -6,6 +6,7 @@ import { config } from "@/utils/providers"
 import { marketplaceAddress, marketplaceAbi } from "@/utils/market-abi";
 import { NFTDisplay } from "@/components/nft-display"
 import { formatEther } from "viem";
+import Transition from '@/components/transition'
 
 /*
     NFT MarketPlace's Listings
@@ -80,24 +81,26 @@ export default function MarketListings() {
     }, [deepness, address]);
     
     return (
-        <div>
-            {loading ? (
-                <p className={"d-flex justify-content-center"}>Loading...</p>
-            ) : (
-                listings.map(listing => (
-                    <div className={"py-3"}>
-                        <NFTDisplay
-                        key={listing.id}
-                        keyProp={listing.id}
-                        contractAddressProp={listing.tokenContract}
-                        tokenIdProp={listing.tokenId}
-                        priceProp={listing.price}
-                        seller={listing.seller}
-                        configurable="false"
-                        />
-                    </div>
-                ))
-            )}
-        </div>
+        <Transition>
+            <div>
+                {loading ? (
+                    <p className={"d-flex justify-content-center"}>Loading...</p>
+                ) : (
+                    listings.map(listing => (
+                        <div className={"py-3"}>
+                            <NFTDisplay
+                            key={listing.id}
+                            keyProp={listing.id}
+                            contractAddressProp={listing.tokenContract}
+                            tokenIdProp={listing.tokenId}
+                            priceProp={listing.price}
+                            seller={listing.seller}
+                            configurable="false"
+                            />
+                        </div>
+                    ))
+                )}
+            </div>
+        </Transition>
     );
-    };
+};
