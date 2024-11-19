@@ -5,9 +5,9 @@ import { motion } from 'framer-motion';
 
 function NavButton({ href, children}) {
     return (
-      <motion.div className="mx-4 hover:underline"
+      <motion.div className="mx-4 hover:underline flex"
       initial = {{ y: 0 }}
-      whileHover = {{ y: 30 }}
+      whileHover = {{ y: 5 }}
       exit = {{ y: 0 }}
       >
         <Link href={href}>{children}</Link>
