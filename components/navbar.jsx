@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 function NavButton({ href, children}) {
     return (
-      <motion.div className="mx-4 hover:underline flex"
+      <motion.div className="mx-4 hover:underline flex inline-block"
       initial = {{ y: 0 }}
       whileHover = {{ y: 5 }}
       exit = {{ y: 0 }}
